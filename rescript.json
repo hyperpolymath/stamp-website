@@ -1,5 +1,6 @@
 {
   "name": "stamp-website",
+  "version": "1.0.0",
   "sources": [
     {
       "dir": "src",
@@ -8,18 +9,14 @@
   ],
   "package-specs": [
     {
-      "module": "esmodule",
+      "module": "es6",
       "in-source": true
     }
   ],
   "suffix": ".res.js",
-  "dependencies": [],
-  "bs-dev-dependencies": [],
-  "pinned-dependencies": [
-    "rescript-tea:../rescript-tea",
-    "cadre-tea-router:../cadre-tea-router"
-  ],
+  "bs-dependencies": [],
   "warnings": {
     "error": "+101"
-  }
+  },
+  "bsc-flags": ["-open Belt"]
 }

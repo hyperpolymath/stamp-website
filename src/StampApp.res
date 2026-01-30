@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // STAMP Protocol - TEA Interactive Demo
-// With k9-svc validation and a2ml typed content
+// With k9-svc validation, a2ml typed content, and proven formal verification
+
+open ProvenSafeUrl
 
 type demoStep =
   | Initial
@@ -11,17 +13,31 @@ type demoStep =
   | UnsubscribeRequested
   | UnsubscribeConfirmed
 
+type urlValidation =
+  | NotValidated
+  | Valid(parsedUrl)
+  | Invalid(string)
+
 type model = {
   demoStep: demoStep,
   demoClicks: int,
+  unsubscribeUrl: string,
+  urlValidation: urlValidation,
 }
 
 type msg =
   | NextStep
   | TrackClick
+  | ValidateUnsubscribeUrl(string)
 
 let init = (): (model, Tea.Cmd.t<msg>) => {
-  ({demoStep: Initial, demoClicks: 0}, Tea.Cmd.none)
+  let model = {
+    demoStep: Initial,
+    demoClicks: 0,
+    unsubscribeUrl: "https://stamp-protocol.org/unsubscribe?token=abc123",
+    urlValidation: NotValidated,
+  }
+  (model, Tea.Cmd.none)
 }
 
 let update = (model: model, msg: msg): (model, Tea.Cmd.t<msg>) => {
@@ -36,10 +52,36 @@ let update = (model: model, msg: msg): (model, Tea.Cmd.t<msg>) => {
       | UnsubscribeRequested => UnsubscribeConfirmed
       | UnsubscribeConfirmed => Initial
       }
-      ({...model, demoStep: nextStep}, Tea.Cmd.none)
+      // Validate URL when entering UnsubscribeRequested state
+      let (updatedModel, cmd) = if nextStep == UnsubscribeRequested {
+        // Use ProvenSafeUrl to validate the unsubscribe link
+        switch parse(model.unsubscribeUrl) {
+        | Ok(parsedUrl) =>
+            // Verify it's HTTPS (required for unsubscribe links)
+            if isHttps(model.unsubscribeUrl) {
+              ({...model, demoStep: nextStep, urlValidation: Valid(parsedUrl)}, Tea.Cmd.none)
+            } else {
+              ({...model, demoStep: nextStep, urlValidation: Invalid("Must use HTTPS")}, Tea.Cmd.none)
+            }
+        | Error(err) =>
+            ({...model, demoStep: nextStep, urlValidation: Invalid(err)}, Tea.Cmd.none)
+        }
+      } else {
+        ({...model, demoStep: nextStep}, Tea.Cmd.none)
+      }
+      (updatedModel, cmd)
 
   | TrackClick =>
       ({...model, demoClicks: model.demoClicks + 1}, Tea.Cmd.none)
+
+  | ValidateUnsubscribeUrl(url) =>
+      // Formally verify URL using proven
+      switch parse(url) {
+      | Ok(parsedUrl) =>
+          ({...model, unsubscribeUrl: url, urlValidation: Valid(parsedUrl)}, Tea.Cmd.none)
+      | Error(err) =>
+          ({...model, unsubscribeUrl: url, urlValidation: Invalid(err)}, Tea.Cmd.none)
+      }
   }
 }
 

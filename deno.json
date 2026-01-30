@@ -1,10 +1,16 @@
 {
   "tasks": {
-    "build": "rescript build",
-    "clean": "rescript clean",
-    "watch": "rescript build -w"
+    "build": "deno run -A npm:rescript",
+    "clean": "deno run -A npm:rescript clean",
+    "watch": "deno run -A npm:rescript -w"
   },
   "imports": {
-    "rescript": "npm:rescript@^11.0.0"
+    "rescript": "npm:rescript@^12.1.0",
+    "@rescript/core": "npm:@rescript/core@^1.7.0",
+    "proven/": "../proven/bindings/rescript/src/"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false
   }
 }
