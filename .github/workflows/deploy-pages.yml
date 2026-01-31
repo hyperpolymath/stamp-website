@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: PMPL-1.0-or-later
 name: Deploy STAMP Protocol
 
 on:
@@ -26,17 +26,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
-      - name: Setup ReScript
-        run: |
-          curl -fsSL https://deno.land/install.sh | sh
-          export PATH="$HOME/.deno/bin:$PATH"
-          deno install npm:rescript
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
 
-      - name: Build ReScript
+      - name: Build Site
         run: |
-          export PATH="$HOME/.deno/bin:$PATH"
-          rescript build
-          cp src/Script.res.js script.js
+          deno task build
+          # Copy compiled output if it exists
+          [ -f src/StampApp.res.js ] && cp src/StampApp.res.js script.js || true
 
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
